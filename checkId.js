@@ -36,7 +36,7 @@ function handle_page(accountName) {
         var sendPass = sendKeys(page, '*[id=pwd]', "Zxcv123123");
         //page.renderpage.render("processing_.png");
         if (sendAccount == false || sendPass == false) {
-          console.log("check Account Name:" + accountName + " fail.")
+          console.log("check Account Name1:" + accountName + " fail.")
           arrError.push(accountName);
           next_page();
         }
@@ -81,11 +81,11 @@ function handle_page(accountName) {
             }, 3000);
           }
         }
-      }, 5500);
+      }, 6500);
     }
     else {
       arrError.push(accountName);
-      console.log("check Account Name:" + accountName + " fail.")
+      console.log("check Account Name2:" + accountName + " fail.")
       next_page();
     }
 
@@ -126,7 +126,7 @@ function sendKeys(page, selector, keys) {
   var fillcontrol = page.evaluate(function (selector) {
     // focus on the text element before typing
     var iframe = document.getElementById('aid-auth-widget-iFrame');
-    var bodyIframe = document.getElementById('aid-auth-widget-iFrame').contentWindow;
+    var bodyIframe = document.getElementById('aid-auth-widget-iFrame').contentWindow.document;
     if (!iframe || !bodyIframe) {
       console.log('selector null')
       return false;
