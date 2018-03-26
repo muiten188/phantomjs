@@ -28,46 +28,60 @@ function handle_page(accountName) {
     console.log("Status:" + status)
     if (status === "success") {
       window.setTimeout(function () {
-        //page.render("processing_.png");
+
         console.log("account Name Checking:" + accountName)
         // sendKeys(page, '*[id=appleId]', "a0i21-patsy273@yahoo.com");
         // sendKeys(page, '*[id=pwd]', "Zxcv123123");
         var sendAccount = sendKeys(page, '*[id=appleId]', accountName);
         var sendPass = sendKeys(page, '*[id=pwd]', "Zxcv123123");
+        //page.renderpage.render("processing_.png");
         if (sendAccount == false || sendPass == false) {
           console.log("check Account Name:" + accountName + " fail.")
           arrError.push(accountName);
+          next_page();
         }
         else {
-          page.evaluate(function () {
+          var elmClick = page.evaluate(function () {
             // focus on the text element before typing
             var element = document.getElementById('aid-auth-widget-iFrame').contentWindow.document.getElementById('sign-in');
-            element.click();
-          });
-          window.setTimeout(function () {
-            //page.render("_done.png");
-            var isRegis = page.evaluate(function (afunc) {
-              if (document.getElementsByClassName('purchases').length > 0) {
-                console.log("done: tai khoan da dang ky thanh toan");
-                return true;
-              }
-              else {
-                console.log("done: tai khoan chua dang ky thanh toan");
-                return false;
-              }
-            });
-            console.log("IS regis:" + isRegis);
-            if (isRegis) {
-              arrRegis.push(accountName);
+            if (!element) {
+              return false;
+            } else {
+              element.click();
             }
-            else {
-              arrNotRegis.push(accountName);
+          });
+          if (elmClick == false) {
+            console.log("elm click null");
+            if(arrError.indexOf(accountName)==-1){
+              arrError.push(accountName);
             }
             next_page();
-            //phantom.exit();
-          }, 4000);
+          } else {
+            window.setTimeout(function () {
+              //page.render("_done.png");
+              var isRegis = page.evaluate(function (afunc) {
+                if (document.getElementsByClassName('purchases').length > 0) {
+                  console.log("done: tai khoan da dang ky thanh toan");
+                  return true;
+                }
+                else {
+                  console.log("done: tai khoan chua dang ky thanh toan");
+                  return false;
+                }
+              });
+              console.log("IS regis:" + isRegis);
+              if (isRegis) {
+                arrRegis.push(accountName);
+              }
+              else {
+                arrNotRegis.push(accountName);
+              }
+              next_page();
+              //phantom.exit();
+            }, 3000);
+          }
         }
-      }, 8000);
+      }, 5500);
     }
     else {
       arrError.push(accountName);
@@ -112,7 +126,9 @@ function sendKeys(page, selector, keys) {
   var fillcontrol = page.evaluate(function (selector) {
     // focus on the text element before typing
     var iframe = document.getElementById('aid-auth-widget-iFrame');
-    if (!iframe) {
+    var bodyIframe = document.getElementById('aid-auth-widget-iFrame').contentWindow;
+    if (!iframe || !bodyIframe) {
+      console.log('selector null')
       return false;
     }
     var element = document.getElementById('aid-auth-widget-iFrame').contentWindow.document.querySelector(selector);
