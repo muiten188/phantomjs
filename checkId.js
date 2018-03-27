@@ -1,10 +1,20 @@
 var page = require('webpage').create();
+var system = require('system');
+var args = system.args;
+var timeOutPage1 = 6500;
+var timeOutPage2 = 5000;
+if (args.length > 0) {
+  timeOutPage1 = args[1] ? args[1] * 1000 : timeOutPage1;
+  timeOutPage2 = args[2] ? args[2] * 1000 : timeOutPage2;
+}
+console.log("thoi gian cho trang dang nhap:" + timeOutPage1);
+console.log("thoi gian cho trang home:" + timeOutPage2);
 console.log("please waiting...")
 // page.viewportSize = {
 //   width: 1349,
 //   height: 3000
 // };
-page.settings.userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1';
+page.settings.userAgent = 'Mozilla/5.0 (Linux; Android 7.0; SAMSUNG SM-G955U Build/NRD90M) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/5.4 Chrome/51.0.2704.106 Mobile Safari/537.36';//'Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1';
 page.onConsoleMessage = function (msg, lineNum, sourceId) {
   console.log(msg);
 };
@@ -20,8 +30,6 @@ var arrAccountName = content.split("\n");
 // phantom.exit();
 next_page();
 
-
-
 function handle_page(accountName) {
 
   page.open("https://reportaproblem.apple.com", function (status) {
@@ -34,7 +42,7 @@ function handle_page(accountName) {
         // sendKeys(page, '*[id=pwd]', "Zxcv123123");
         var sendAccount = sendKeys(page, '*[id=appleId]', accountName);
         var sendPass = sendKeys(page, '*[id=pwd]', "Zxcv123123");
-        //page.renderpage.render("processing_.png");
+        page.render("processing_.png");
         if (sendAccount == false || sendPass == false) {
           console.log("check Account Name1:" + accountName + " fail.")
           arrError.push(accountName);
@@ -52,14 +60,18 @@ function handle_page(accountName) {
           });
           if (elmClick == false) {
             console.log("elm click null");
-            if(arrError.indexOf(accountName)==-1){
+            if (arrError.indexOf(accountName) == -1) {
               arrError.push(accountName);
             }
             next_page();
           } else {
             window.setTimeout(function () {
-              //page.render("_done.png");
+              page.render("_done.png");
               var isRegis = page.evaluate(function (afunc) {
+                var iframe = document.getElementById('aid-auth-widget-iFrame');
+                if (iframe) {
+                  return 'not check';
+                }
                 if (document.getElementsByClassName('purchases').length > 0) {
                   console.log("done: tai khoan da dang ky thanh toan");
                   return true;
@@ -69,8 +81,13 @@ function handle_page(accountName) {
                   return false;
                 }
               });
-              console.log("IS regis:" + isRegis);
-              if (isRegis) {
+              //console.log("IS regis:" + isRegis);
+              if (isRegis == "not check") {
+                arrError.push(accountName);
+                console.log("not check Change IP:" + accountName + " fail.")
+                phantom.exit(1);
+              }
+              if (isRegis == true) {
                 arrRegis.push(accountName);
               }
               else {
@@ -78,10 +95,10 @@ function handle_page(accountName) {
               }
               next_page();
               //phantom.exit();
-            }, 3000);
+            }, timeOutPage2);
           }
         }
-      }, 6500);
+      }, timeOutPage1);
     }
     else {
       arrError.push(accountName);
