@@ -7,6 +7,7 @@ if (args.length > 0) {
   timeOutPage1 = args[1] ? args[1] * 1000 : timeOutPage1;
   timeOutPage2 = args[2] ? args[2] * 1000 : timeOutPage2;
 }
+
 console.log("thoi gian cho trang dang nhap:" + timeOutPage1);
 console.log("thoi gian cho trang home:" + timeOutPage2);
 console.log("please waiting...")
@@ -18,12 +19,31 @@ page.settings.userAgent = 'Mozilla/5.0 (Linux; Android 7.0; SAMSUNG SM-G955U Bui
 page.onConsoleMessage = function (msg, lineNum, sourceId) {
   console.log(msg);
 };
+page.onResourceError = function(resourceError) {
+  console.error(resourceError.url + ': ' +'  - error code: ' + resourceError.errorCode +"  :  "+ resourceError.errorString);
+};
+// page.onResourceRequested = function (req) {
+//   console.log("-----------------------------------------------------");
+//   console.log("REQUESTED");
+//   console.log(JSON.stringify(req, undefined, 4));
+//   console.log("-----------------------------------------------------");
+// };
+
+// page.onResourceReceived = function (res) {
+//   console.log("-----------------------------------------------------");
+//   console.log("RECEIVED");
+//   console.log('received: ' + JSON.stringify(res, undefined, 4));
+//   console.log("-----------------------------------------------------");
+// };
 var fs = require('fs');
+var arrProxy=[];
 var arrNotRegis = [];
 var arrRegis = [];
 var arrError = [];
 var content = fs.read('file_input.txt');
 var arrAccountName = content.split("\n");
+var contentProxy = fs.read('list_proxy.txt');
+var arrProxy = contentProxy.split("\n");
 
 // var path = 'output.txt';
 // fs.write(path, content, 'w');
@@ -85,7 +105,7 @@ function handle_page(accountName) {
               if (isRegis == "not check") {
                 arrError.push(accountName);
                 console.log("not check Change IP:" + accountName + " fail.")
-                phantom.exit(1);
+                next_page();
               }
               if (isRegis == true) {
                 arrRegis.push(accountName);
@@ -102,6 +122,7 @@ function handle_page(accountName) {
     }
     else {
       arrError.push(accountName);
+      page.render("fail_.png");
       console.log("check Account Name2:" + accountName + " fail.")
       next_page();
     }
@@ -110,6 +131,10 @@ function handle_page(accountName) {
   });
 }
 function next_page() {
+  var ip_port=arrProxy[71].split(':');
+  console.log('Use IP: '+ip_port[0])
+  console.log('Use Port: '+ip_port[1])
+  phantom.setProxy(ip_port[0], Number(ip_port[1]), 'http');
   var accountName = arrAccountName.shift();
   if (!accountName) {
     var path = 'list_chua_dang_ky.txt';
