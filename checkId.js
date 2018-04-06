@@ -1,8 +1,9 @@
 var page = require('webpage').create();
 var system = require('system');
+page.settings.resourceTimeout = 15000;
 var args = system.args;
-var timeOutPage1 = 6500;
-var timeOutPage2 = 5000;
+var timeOutPage1 = 8000;
+var timeOutPage2 = 6000;
 if (args.length > 0) {
   timeOutPage1 = args[1] ? args[1] * 1000 : timeOutPage1;
   timeOutPage2 = args[2] ? args[2] * 1000 : timeOutPage2;
@@ -19,8 +20,8 @@ page.settings.userAgent = 'Mozilla/5.0 (Linux; Android 7.0; SAMSUNG SM-G955U Bui
 page.onConsoleMessage = function (msg, lineNum, sourceId) {
   console.log(msg);
 };
-page.onResourceError = function(resourceError) {
-  console.error(resourceError.url + ': ' +'  - error code: ' + resourceError.errorCode +"  :  "+ resourceError.errorString);
+page.onResourceError = function (resourceError) {
+  console.error(resourceError.url + ': ' + '  - error code: ' + resourceError.errorCode + "  :  " + resourceError.errorString);
 };
 // page.onResourceRequested = function (req) {
 //   console.log("-----------------------------------------------------");
@@ -36,14 +37,14 @@ page.onResourceError = function(resourceError) {
 //   console.log("-----------------------------------------------------");
 // };
 var fs = require('fs');
-var arrProxy=[];
+var arrProxy = [];
 var arrNotRegis = [];
 var arrRegis = [];
 var arrError = [];
 var content = fs.read('file_input.txt');
 var arrAccountName = content.split("\n");
-var contentProxy = fs.read('list_proxy.txt');
-var arrProxy = contentProxy.split("\n");
+// var contentProxy = fs.read('list_proxy.txt');
+// var arrProxy = contentProxy.split("\n");
 
 // var path = 'output.txt';
 // fs.write(path, content, 'w');
@@ -60,10 +61,9 @@ function handle_page(accountName) {
         console.log("account Name Checking:" + accountName)
         // sendKeys(page, '*[id=appleId]', "a0i21-patsy273@yahoo.com");
         // sendKeys(page, '*[id=pwd]', "Zxcv123123");
-        var sendAccount = sendKeys(page, '*[id=appleId]', accountName);
-        var sendPass = sendKeys(page, '*[id=pwd]', "Zxcv123123");
-        page.render("processing_.png");
-        if (sendAccount == false || sendPass == false) {
+        var sendAccount = sendKeys(page, '*[id=account_name_text_field]', accountName);
+        page.render("step1.png");
+        if (sendAccount == false) {
           console.log("check Account Name1:" + accountName + " fail.")
           arrError.push(accountName);
           next_page();
@@ -86,36 +86,62 @@ function handle_page(accountName) {
             next_page();
           } else {
             window.setTimeout(function () {
-              page.render("_done.png");
-              var isRegis = page.evaluate(function (afunc) {
-                var iframe = document.getElementById('aid-auth-widget-iFrame');
-                if (iframe) {
-                  return 'not check';
+              if (elmClick == false) {
+                console.log("elm click null");
+                if (arrError.indexOf(accountName) == -1) {
+                  arrError.push(accountName);
                 }
-                if (document.getElementsByClassName('purchases').length > 0) {
-                  console.log("done: tai khoan da dang ky thanh toan");
-                  return true;
-                }
-                else {
-                  console.log("done: tai khoan chua dang ky thanh toan");
-                  return false;
-                }
-              });
-              //console.log("IS regis:" + isRegis);
-              if (isRegis == "not check") {
-                arrError.push(accountName);
-                console.log("not check Change IP:" + accountName + " fail.")
                 next_page();
+              } else {
+                var sendPass = sendKeys(page, '*[id=password_text_field]', "Zxcv123123");
+                if (sendPass == false) {
+                  console.log("check Account Name1:" + accountName + " fail.")
+                  arrError.push(accountName);
+                  next_page();
+                }
+                page.render("step2.png");
+                var elmClick = page.evaluate(function () {
+                  // focus on the text element before typing
+                  var element = document.getElementById('aid-auth-widget-iFrame').contentWindow.document.getElementById('sign-in');
+                  if (!element) {
+                    return false;
+                  } else {
+                    element.click();
+                  }
+                });
+                window.setTimeout(function () {
+                  page.render("step3.png");
+                  var isRegis = page.evaluate(function (afunc) {
+                    var iframe = document.getElementById('aid-auth-widget-iFrame');
+                    if (iframe) {
+                      return 'not check';
+                    }
+                    if (document.getElementsByClassName('purchases').length > 0) {
+                      console.log("done: tai khoan da dang ky thanh toan");
+                      return true;
+                    }
+                    else {
+                      console.log("done: tai khoan chua dang ky thanh toan");
+                      return false;
+                    }
+                  });
+                  //console.log("IS regis:" + isRegis);
+                  if (isRegis == "not check") {
+                    arrError.push(accountName);
+                    console.log("not check Change IP:" + accountName + " fail.")
+                    next_page();
+                  }
+                  if (isRegis == true) {
+                    arrRegis.push(accountName);
+                  }
+                  else {
+                    arrNotRegis.push(accountName);
+                  }
+                  next_page();
+                  //phantom.exit();
+                }, timeOutPage2);
               }
-              if (isRegis == true) {
-                arrRegis.push(accountName);
-              }
-              else {
-                arrNotRegis.push(accountName);
-              }
-              next_page();
-              //phantom.exit();
-            }, timeOutPage2);
+            }, 1000)
           }
         }
       }, timeOutPage1);
@@ -131,10 +157,11 @@ function handle_page(accountName) {
   });
 }
 function next_page() {
-  var ip_port=arrProxy[71].split(':');
-  console.log('Use IP: '+ip_port[0])
-  console.log('Use Port: '+ip_port[1])
-  phantom.setProxy(ip_port[0], Number(ip_port[1]), 'http');
+  //var ip_port=arrProxy[71].split(':');
+  //console.log('Use IP: 23.81.109.6')
+  //console.log('Use Port: 16707')
+  //phantom.setProxy("23.81.109.6", 16707, 'http','muiten188','bach7sd99');
+  //phantom.setProxy("118.70.213.14", 3128, 'http');
   var accountName = arrAccountName.shift();
   if (!accountName) {
     var path = 'list_chua_dang_ky.txt';
